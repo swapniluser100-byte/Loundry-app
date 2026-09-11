@@ -1,0 +1,57 @@
+name = "laundry-backend"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ---------------------------------------------------------------------------
+# D1 database binding.
+# Create with: wrangler d1 create laundry_db
+# Then paste the returned database_id below.
+# ---------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "laundry_db"
+database_id = "REPLACE-WITH-YOUR-D1-DATABASE-ID"
+migrations_dir = "migrations"
+
+# ---------------------------------------------------------------------------
+# R2 bucket binding for QR code images.
+# Create with: wrangler r2 bucket create laundry-qr-codes
+# ---------------------------------------------------------------------------
+[[r2_buckets]]
+binding = "QR_BUCKET"
+bucket_name = "laundry-qr-codes"
+
+# ---------------------------------------------------------------------------
+# Plain-text config (safe to commit). Real secrets go through
+# `wrangler secret put <NAME>` and must NOT be placed here.
+# ---------------------------------------------------------------------------
+[vars]
+SHOP_NAME = "Shree Laundry"
+UPI_ID = "shreelaundry@okhdfcbank"
+UPI_PAYEE_NAME = "Shree Laundry"
+EMAIL_PROVIDER = "resend"
+# Sender address - must be on a domain you have verified with your email
+# provider (see docs/DEPLOYMENT.md). Cannot be a random gmail/yahoo address.
+FROM_EMAIL = "orders@yourlaundry.in"
+FROM_NAME = "Shree Laundry"
+# Frontend URL used to build the customer tracking link embedded in the QR
+# code and in emails, e.g. https://laundry.pages.dev
+PUBLIC_BASE_URL = "https://laundry.pages.dev"
+# This worker's own deployed URL, used as a fallback to serve QR images at
+# /qr/:key when R2_PUBLIC_URL is not configured (see docs/DEPLOYMENT.md).
+WORKER_BASE_URL = "https://laundry-backend.<your-subdomain>.workers.dev"
+# Optional: a custom domain / R2.dev public URL attached to the R2 bucket.
+# Leave blank to fall back to WORKER_BASE_URL + /qr/:key.
+R2_PUBLIC_URL = ""
+
+# ---------------------------------------------------------------------------
+# SECRETS (set these with `wrangler secret put NAME`, never commit real
+# values here):
+#   JWT_SECRET      - long random string used to sign staff login tokens
+#   RESEND_API_KEY  - needed if EMAIL_PROVIDER = "resend" (default)
+#   BREVO_API_KEY   - needed if EMAIL_PROVIDER = "brevo"
+# ---------------------------------------------------------------------------
+
+[env.production]
+name = "laundry-backend"
