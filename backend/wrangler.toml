@@ -11,7 +11,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "laundry_db"
-database_id = "REPLACE-WITH-YOUR-D1-DATABASE-ID"
+database_id = "a92766e3-9ec4-43de-abf4-0e12127c3131"
 migrations_dir = "migrations"
 
 # ---------------------------------------------------------------------------

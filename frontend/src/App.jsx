@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Orders from "./pages/Orders.jsx";
 import NewOrder from "./pages/NewOrder.jsx";
 import ScanPickup from "./pages/ScanPickup.jsx";
 import OrderPublic from "./pages/OrderPublic.jsx";
@@ -17,6 +18,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
           </ProtectedRoute>
         }
       />

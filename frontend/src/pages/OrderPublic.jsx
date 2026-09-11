@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
-import { t, STATUS_FLOW } from "../i18n";
+import { STATUS_FLOW } from "../constants";
 import StatusBadge from "../components/StatusBadge";
 
 // Public, no-login page that the QR code and email tracking link point to.
@@ -16,7 +16,7 @@ export default function OrderPublic() {
     api
       .getPublicOrder(orderNumber)
       .then(setData)
-      .catch(() => setError(t.orderNotFound));
+      .catch(() => setError("Order not found"));
   }, [orderNumber]);
 
   if (error) {
@@ -30,7 +30,7 @@ export default function OrderPublic() {
   if (!data) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
-        <p className="text-gray-400">{t.loading}</p>
+        <p className="text-gray-400">Loading...</p>
       </div>
     );
   }
@@ -43,11 +43,11 @@ export default function OrderPublic() {
       <div className="max-w-md mx-auto space-y-4">
         <div className="text-center">
           <h1 className="text-lg font-bold text-gray-900">{shop_name}</h1>
-          <p className="text-sm text-gray-500">{t.trackTitle}</p>
+          <p className="text-sm text-gray-500">Your Laundry Order</p>
         </div>
 
         <div className="card text-center space-y-2">
-          <p className="text-sm text-gray-500">{t.orderId}</p>
+          <p className="text-sm text-gray-500">Order ID</p>
           <p className="text-xl font-mono font-bold text-brand">{order.order_number}</p>
           <StatusBadge status={order.status} />
         </div>
@@ -63,14 +63,14 @@ export default function OrderPublic() {
                 >
                   {i + 1}
                 </div>
-                <p className="text-[10px] text-center text-gray-500 mt-1 leading-tight">{t.status[s]}</p>
+                <p className="text-[10px] text-center text-gray-500 mt-1 leading-tight">{s}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div className="card space-y-1">
-          <p className="text-sm text-gray-500">{t.itemsLabel}</p>
+          <p className="text-sm text-gray-500">Items</p>
           <p className="text-gray-800">
             {Object.entries(order.items)
               .filter(([, qty]) => qty > 0)
@@ -79,9 +79,7 @@ export default function OrderPublic() {
           </p>
           <p className="text-sm text-gray-500 mt-2">{order.service_type}</p>
           {order.amount != null && (
-            <p className="text-lg font-bold text-gray-900 mt-2">
-              {t.amountLabel}: ₹{order.amount}
-            </p>
+            <p className="text-lg font-bold text-gray-900 mt-2">Amount: ₹{order.amount}</p>
           )}
         </div>
 
@@ -92,7 +90,7 @@ export default function OrderPublic() {
               alt="Order QR"
               className="w-48 h-48 mx-auto border border-gray-200 rounded-xl p-2"
             />
-            <p className="text-xs text-gray-500 mt-2">{t.qrForPickup}</p>
+            <p className="text-xs text-gray-500 mt-2">Show this QR code at pickup</p>
           </div>
         )}
       </div>

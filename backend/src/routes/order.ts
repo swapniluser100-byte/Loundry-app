@@ -206,18 +206,31 @@ order.get("/get-by-qr", async (c) => {
   });
 });
 
-// GET /order/list?status=Received&limit=50
+// GET /order/list?status=Received&q=search+text&limit=50
+// `q` matches against order number, customer name, or customer phone - used
+// by the Orders screen's search box. `status` and `q` can be combined.
 order.get("/list", async (c) => {
   const status = c.req.query("status");
+  const q = c.req.query("q")?.trim();
   const limit = Math.min(parseInt(c.req.query("limit") || "50", 10) || 50, 200);
 
   let query = `SELECT o.id, o.order_number, o.status, o.amount, o.service_type, o.items_json,
                       o.created_at, c.name as customer_name, c.phone as customer_phone, c.email as customer_email
                FROM orders o JOIN customers c ON c.id = o.customer_id`;
+  const conditions: string[] = [];
   const binds: unknown[] = [];
+
   if (status) {
-    query += " WHERE o.status = ?";
+    conditions.push("o.status = ?");
     binds.push(status);
+  }
+  if (q) {
+    conditions.push("(o.order_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)");
+    const like = `%${q}%`;
+    binds.push(like, like, like);
+  }
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
   }
   query += " ORDER BY o.created_at DESC LIMIT ?";
   binds.push(limit);
@@ -228,6 +241,52 @@ order.get("/list", async (c) => {
 
   const orders = rows.results.map((r) => ({ ...r, items: JSON.parse(r.items_json as string) }));
   return c.json({ orders });
+});
+
+// GET /order/stats
+// Feeds the Dashboard overview screen: today's and all-time order counts and
+// revenue, plus a count per status. "Revenue" counts only Handed Over orders
+// (i.e. orders that have actually been paid and collected).
+order.get("/stats", async (c) => {
+  const totals = await c.env.DB.prepare(
+    `SELECT COUNT(*) as order_count,
+            COALESCE(SUM(CASE WHEN status = 'Handed Over' THEN amount ELSE 0 END), 0) as revenue
+     FROM orders`
+  ).first<{ order_count: number; revenue: number }>();
+
+  const today = await c.env.DB.prepare(
+    `SELECT COUNT(*) as order_count,
+            COALESCE(SUM(CASE WHEN status = 'Handed Over' THEN amount ELSE 0 END), 0) as revenue
+     FROM orders WHERE date(created_at) = date('now')`
+  ).first<{ order_count: number; revenue: number }>();
+
+  const statusRows = await c.env.DB.prepare(`SELECT status, COUNT(*) as count FROM orders GROUP BY status`).all<{
+    status: string;
+    count: number;
+  }>();
+
+  const by_status: Record<string, number> = {
+    Received: 0,
+    "In Progress": 0,
+    "Ready for Pickup": 0,
+    "Handed Over": 0,
+  };
+  for (const row of statusRows.results) {
+    by_status[row.status] = row.count;
+  }
+
+  const recent = await c.env.DB.prepare(
+    `SELECT o.order_number, o.status, o.amount, o.created_at, c.name as customer_name
+     FROM orders o JOIN customers c ON c.id = o.customer_id
+     ORDER BY o.created_at DESC LIMIT 5`
+  ).all();
+
+  return c.json({
+    today: { orders: today?.order_count ?? 0, revenue: today?.revenue ?? 0 },
+    totals: { orders: totals?.order_count ?? 0, revenue: totals?.revenue ?? 0 },
+    by_status,
+    recent_orders: recent.results,
+  });
 });
 
 export default order;

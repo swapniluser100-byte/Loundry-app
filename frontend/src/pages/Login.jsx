@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, setSession, isLoggedIn } from "../api";
-import { t } from "../i18n";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ export default function Login() {
       setSession(data.token, data.user, data.shop_name);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(t.invalidLogin);
+      setError("Incorrect username or password");
     } finally {
       setLoading(false);
     }
@@ -34,13 +33,13 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-2">🧺</div>
-          <h1 className="text-2xl font-bold text-white">{t.appName}</h1>
-          <p className="text-blue-100 text-sm mt-1">{t.shopTagline}</p>
+          <h1 className="text-2xl font-bold text-white">Laundry Manager</h1>
+          <p className="text-blue-100 text-sm mt-1">Pune Laundry Order System</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.username}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <input
               className="input-field"
               value={username}
@@ -50,7 +49,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.password}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               className="input-field"
               type="password"
@@ -63,7 +62,7 @@ export default function Login() {
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? t.loggingIn : t.loginButton}
+            {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
       </div>

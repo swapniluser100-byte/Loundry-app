@@ -15,9 +15,7 @@ export interface EmailContent {
 }
 
 /**
- * Marathi/Hinglish email copy, matching the shop's original SMS wording -
- * only the delivery channel changed from SMS to email, so the tone and
- * language stay identical to what customers already expect.
+ * Plain English email copy for the four order lifecycle notifications.
  */
 export function buildEmail(
   env: Env,
@@ -49,37 +47,37 @@ export function buildEmail(
     case "received":
       return {
         subject: `Order Received - ${ctx.orderNumber} | ${shop}`,
-        text: `Namaskar! Aapla laundry ${shop} kade received zale aahe. Order ID: ${ctx.orderNumber}. Status pahnyasathi: ${ctx.trackUrl}`,
+        text: `Hello! Your laundry has been received at ${shop}. Order ID: ${ctx.orderNumber}. Track your order: ${ctx.trackUrl}`,
         html: wrap(
           [
-            `Namaskar! Aapla laundry <strong>${shop}</strong> kade received zale aahe.`,
+            `Hello! Your laundry has been received at <strong>${shop}</strong>.`,
             `Order ID: <strong>${ctx.orderNumber}</strong>`,
           ],
-          "Order Status Pahaa",
+          "View Order Status",
           ctx.trackUrl
         ),
       };
     case "in_progress":
       return {
-        subject: `Processing Suru Aahe - ${ctx.orderNumber} | ${shop}`,
-        text: `Aapla kapde ${shop} madhe processing madhe aahet. Order ID: ${ctx.orderNumber}.`,
-        html: wrap([`Aapla kapde <strong>${shop}</strong> madhe processing madhe aahet.`]),
+        subject: `Your Order is Being Processed - ${ctx.orderNumber} | ${shop}`,
+        text: `Your laundry is now being processed at ${shop}. Order ID: ${ctx.orderNumber}.`,
+        html: wrap([`Your laundry is now being <strong>processed</strong> at <strong>${shop}</strong>.`]),
       };
     case "ready":
       return {
-        subject: `Tayar Aahe - Pickup Sathi Ya - ${ctx.orderNumber} | ${shop}`,
-        text: `Aapla kapde tayar aahet. Pickup sathi ya. Order ID: ${ctx.orderNumber}. QR dakhva: ${ctx.trackUrl}`,
+        subject: `Ready for Pickup - ${ctx.orderNumber} | ${shop}`,
+        text: `Your laundry is ready! Please come by for pickup. Order ID: ${ctx.orderNumber}. Show this QR at pickup: ${ctx.trackUrl}`,
         html: wrap(
-          [`Aapla kapde <strong>tayar</strong> aahet. Pickup sathi ya.`, `Pickup vela khali dilela QR dakhva.`],
-          "QR Baghha",
+          [`Your laundry is <strong>ready</strong>! Please come by for pickup.`, `Show the QR code below at pickup.`],
+          "View Pickup QR",
           ctx.trackUrl
         ),
       };
     case "handed_over":
       return {
-        subject: `Dhanyavaad! Order Handover Zala - ${ctx.orderNumber} | ${shop}`,
-        text: `Dhanyavaad! Aapla laundry handover zale aahe. Punha bhet dyaychi vinanti - ${shop}.`,
-        html: wrap([`Dhanyavaad! Aapla laundry handover zale aahe.`, `Punha bhet dyaychi vinanti - ${shop}.`]),
+        subject: `Thank You! Order Completed - ${ctx.orderNumber} | ${shop}`,
+        text: `Thank you! Your laundry has been handed over. We hope to see you again soon - ${shop}.`,
+        html: wrap([`Thank you! Your laundry has been <strong>handed over</strong>.`, `We hope to see you again soon - ${shop}.`]),
       };
   }
 }

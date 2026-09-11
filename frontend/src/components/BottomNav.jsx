@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { t } from "../i18n";
 
 const items = [
-  { to: "/", label: t.dashboard, icon: "🏠" },
-  { to: "/new-order", label: t.newOrder, icon: "🧺" },
-  { to: "/scan", label: t.scanQr, icon: "📷" },
+  { to: "/", label: "Dashboard", icon: "📊" },
+  { to: "/orders", label: "Orders", icon: "📋" },
+  { to: "/new-order", label: "New Order", icon: "🧺" },
+  { to: "/scan", label: "Scan QR Code", icon: "📷" },
 ];
 
 export default function BottomNav() {

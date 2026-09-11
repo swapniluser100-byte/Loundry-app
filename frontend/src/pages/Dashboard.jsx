@@ -1,55 +1,31 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { api, clearSession, getShopName } from "../api";
-import { t, STATUS_FLOW } from "../i18n";
 import StatusBadge from "../components/StatusBadge";
-import { useNavigate } from "react-router-dom";
 
-const NEXT_STATUS = {
-  Received: "In Progress",
-  "In Progress": "Ready for Pickup",
-};
-
-const NEXT_LABEL = {
-  Received: t.moveToInProgress,
-  "In Progress": t.moveToReady,
+// Status accents match StatusBadge's colors exactly, so a status means the
+// same color everywhere in the app. Always paired with a text label (here
+// and in StatusBadge) - color is never the only way status is conveyed.
+const STATUS_ACCENT = {
+  Received: "bg-amber-500",
+  "In Progress": "bg-blue-500",
+  "Ready for Pickup": "bg-pink-500",
+  "Handed Over": "bg-green-600",
 };
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
-  const [filter, setFilter] = useState("");
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [busyOrder, setBusyOrder] = useState(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.listOrders(filter || undefined);
-      setOrders(data.orders);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    load();
-  }, [load]);
-
-  async function advanceStatus(order) {
-    const next = NEXT_STATUS[order.status];
-    if (!next) return;
-    setBusyOrder(order.order_number);
-    try {
-      await api.updateOrderStatus({ order_number: order.order_number, status: next });
-      await load();
-    } catch (err) {
-      alert(err.message || t.errorGeneric);
-    } finally {
-      setBusyOrder(null);
-    }
-  }
+    api
+      .getOrderStats()
+      .then(setStats)
+      .catch((err) => setError(err.message || "Could not load dashboard"))
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleLogout() {
     clearSession();
@@ -57,78 +33,77 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="px-4 pt-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="px-4 pt-6 pb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold text-gray-900">{getShopName()}</h1>
-          <p className="text-sm text-gray-500">{t.allOrders}</p>
+          <p className="text-sm text-gray-500">Dashboard</p>
         </div>
         <button onClick={handleLogout} className="text-sm text-gray-500 underline">
-          {t.logout}
+          Log Out
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4">
-        <FilterChip label={t.filterAll} active={filter === ""} onClick={() => setFilter("")} />
-        {STATUS_FLOW.map((s) => (
-          <FilterChip key={s} label={t.status[s]} active={filter === s} onClick={() => setFilter(s)} />
-        ))}
-      </div>
-
       {loading ? (
-        <p className="text-center text-gray-400 mt-10">{t.loading}</p>
-      ) : orders.length === 0 ? (
-        <p className="text-center text-gray-400 mt-10">{t.noOrders}</p>
+        <p className="text-center text-gray-400 mt-10">Loading...</p>
+      ) : error ? (
+        <p className="text-center text-red-600 mt-10">{error}</p>
       ) : (
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <div key={order.order_number} className="card">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900">{order.order_number}</p>
-                  <p className="text-sm text-gray-500">
-                    {order.customer_name} · {order.customer_phone}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {order.service_type} ·{" "}
-                    {Object.entries(order.items)
-                      .filter(([, qty]) => qty > 0)
-                      .map(([name, qty]) => `${name} x${qty}`)
-                      .join(", ")}
-                  </p>
-                  {order.amount != null && (
-                    <p className="text-sm text-gray-700 font-medium mt-1">₹{order.amount}</p>
-                  )}
-                </div>
-                <StatusBadge status={order.status} />
-              </div>
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label="Today's Orders" value={stats.today.orders} />
+            <StatTile label="Today's Revenue" value={`₹${stats.today.revenue}`} />
+            <StatTile label="Total Orders" value={stats.totals.orders} />
+            <StatTile label="Total Revenue" value={`₹${stats.totals.revenue}`} />
+          </div>
 
-              {NEXT_STATUS[order.status] && (
-                <button
-                  className="btn-secondary w-full mt-3 text-sm"
-                  disabled={busyOrder === order.order_number}
-                  onClick={() => advanceStatus(order)}
-                >
-                  {busyOrder === order.order_number ? t.updating : NEXT_LABEL[order.status]}
-                </button>
-              )}
+          <div className="card space-y-3">
+            <p className="font-semibold text-gray-900">Orders by Status</p>
+            {Object.entries(stats.by_status).map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${STATUS_ACCENT[status]}`} />
+                  <span className="text-sm text-gray-700">{status}</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900">{count}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="card space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-gray-900">Recent Orders</p>
+              <Link to="/orders" className="text-sm text-brand font-medium">
+                View All
+              </Link>
             </div>
-          ))}
+            {stats.recent_orders.length === 0 ? (
+              <p className="text-sm text-gray-400">No orders yet</p>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {stats.recent_orders.map((order) => (
+                  <div key={order.order_number} className="py-2 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
+                      <p className="text-xs text-gray-500">{order.customer_name}</p>
+                    </div>
+                    <StatusBadge status={order.status} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function FilterChip({ label, active, onClick }) {
+function StatTile({ label, value }) {
   return (
-    <button
-      onClick={onClick}
-      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border ${
-        active ? "bg-brand text-white border-brand" : "bg-white text-gray-600 border-gray-200"
-      }`}
-    >
-      {label}
-    </button>
+    <div className="card">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+    </div>
   );
 }

@@ -66,7 +66,7 @@ egress fees, so serving it to customers' phones and inlining it in emails
 costs nothing extra. Free tier: 10 GB storage, 1M Class A (write) and 10M
 Class B (read) operations/month.
 
-**Resend (or Brevo)** sends the four Marathi/Hinglish transactional emails:
+**Resend (or Brevo)** sends the four transactional emails:
 order received, in progress, ready for pickup, handed over. Email replaced
 SMS as the sole communication channel, which also means messages can now
 carry the QR image inline and a styled "view status" button instead of a
@@ -93,7 +93,7 @@ app. Cloudflare never touches money.
    URL, uploads it to R2, saves everything to D1, and emails the "received"
    template (with the QR embedded) via Resend/Brevo.
 4. **Status updates**: as laundry moves through the shop, staff taps
-   "Processing Suru Kara" / "Tayar Zala" on the dashboard →
+   "Start Processing" / "Mark Ready for Pickup" on the dashboard →
    `POST /order/update-status`, which logs to `status_logs` and sends the
    matching email.
 5. **Pickup**: customer shows the QR (from the email or by reopening the

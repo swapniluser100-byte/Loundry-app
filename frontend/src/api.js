@@ -79,7 +79,8 @@ export const api = {
   createOrder: (payload) => request("/order/create", { method: "POST", body: payload }),
   updateOrderStatus: (payload) => request("/order/update-status", { method: "POST", body: payload }),
   getOrderByQr: (data) => request("/order/get-by-qr", { query: { data } }),
-  listOrders: (status) => request("/order/list", { query: { status } }),
+  listOrders: (status, q) => request("/order/list", { query: { status, q, limit: 200 } }),
+  getOrderStats: () => request("/order/stats"),
 
   generateUpiQr: (order_number, amount) =>
     request("/payment/generate-upi-qr", { method: "POST", body: { order_number, amount } }),

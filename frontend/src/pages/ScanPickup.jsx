@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { api } from "../api";
-import { t } from "../i18n";
 import StatusBadge from "../components/StatusBadge";
 
 const SCANNER_ELEMENT_ID = "qr-reader";
@@ -42,7 +41,7 @@ export default function ScanPickup() {
       );
       setScanning(true);
     } catch (err) {
-      setError("Camera suru karta ale nahi. Manual Order ID takaa.");
+      setError("Could not start camera. Please enter the Order ID manually.");
     }
   }
 
@@ -68,7 +67,7 @@ export default function ScanPickup() {
       setUpiQr(null);
       setHandedOver(false);
     } catch (err) {
-      setError(t.orderNotFound);
+      setError("Order not found");
     }
   }
 
@@ -86,7 +85,7 @@ export default function ScanPickup() {
       const data = await api.generateUpiQr(order.order_number, Number(amount));
       setUpiQr(data);
     } catch (err) {
-      setError(err.message || t.errorGeneric);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -104,7 +103,7 @@ export default function ScanPickup() {
       });
       setHandedOver(true);
     } catch (err) {
-      setError(err.message || t.errorGeneric);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -121,34 +120,34 @@ export default function ScanPickup() {
 
   return (
     <div className="px-4 pt-6 pb-6 space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">{t.scanQr}</h1>
+      <h1 className="text-xl font-bold text-gray-900">Scan QR Code</h1>
 
       {!order && (
         <>
           <div className="card space-y-3">
-            <p className="text-sm text-gray-600">{t.scanInstructions}</p>
+            <p className="text-sm text-gray-600">Point the camera at the customer's QR code</p>
             <div id={SCANNER_ELEMENT_ID} className="w-full rounded-xl overflow-hidden" />
             {!scanning ? (
               <button className="btn-primary w-full" onClick={startCamera}>
-                {t.startCamera}
+                Start Camera
               </button>
             ) : (
               <button className="btn-secondary w-full" onClick={stopCamera}>
-                {t.stopCamera}
+                Stop Camera
               </button>
             )}
           </div>
 
           <form onSubmit={handleManualFind} className="card space-y-3">
-            <p className="text-sm font-semibold text-gray-700">{t.manualEntryTitle}</p>
+            <p className="text-sm font-semibold text-gray-700">Or enter the Order ID manually</p>
             <input
               className="input-field"
               value={manualId}
               onChange={(e) => setManualId(e.target.value)}
-              placeholder={t.enterOrderId}
+              placeholder="Enter Order ID (e.g. PN-LND-2026-000123)"
             />
             <button type="submit" className="btn-secondary w-full">
-              {t.findOrder}
+              Find Order
             </button>
           </form>
         </>
@@ -175,7 +174,7 @@ export default function ScanPickup() {
 
           {!handedOver && (
             <div className="card space-y-3">
-              <label className="block text-sm font-medium text-gray-700">{t.finalAmount}</label>
+              <label className="block text-sm font-medium text-gray-700">Final Amount</label>
               <input
                 className="input-field"
                 type="number"
@@ -186,7 +185,7 @@ export default function ScanPickup() {
                 onChange={(e) => setAmount(e.target.value)}
               />
               <button className="btn-primary w-full" onClick={handleGenerateQr} disabled={busy}>
-                {busy ? t.generatingQr : t.generatePaymentQr}
+                {busy ? "Generating QR code..." : "Generate Payment QR Code"}
               </button>
             </div>
           )}
@@ -198,13 +197,13 @@ export default function ScanPickup() {
                 alt="UPI Payment QR"
                 className="w-56 h-56 mx-auto border border-gray-200 rounded-xl p-2"
               />
-              <p className="text-sm text-gray-600">{t.scanToPay}</p>
+              <p className="text-sm text-gray-600">Ask the customer to scan this UPI QR code to pay</p>
               <p className="text-lg font-bold text-gray-900">₹{upiQr.amount}</p>
               <a href={upiQr.upi_uri} className="btn-secondary block">
-                {t.openUpiApp}
+                Open in UPI App
               </a>
               <button className="btn-primary w-full" onClick={handleHandover} disabled={busy}>
-                {busy ? t.updating : t.markHandedOver}
+                {busy ? "Updating..." : "Payment Received - Mark as Handed Over"}
               </button>
             </div>
           )}
@@ -212,16 +211,16 @@ export default function ScanPickup() {
           {handedOver && (
             <div className="card text-center space-y-3">
               <div className="text-5xl">🎉</div>
-              <p className="font-bold text-green-700">{t.handoverDone}</p>
+              <p className="font-bold text-green-700">Handed over. Confirmation email sent.</p>
               <button className="btn-secondary w-full" onClick={resetScan}>
-                {t.scanQr}
+                Scan QR Code
               </button>
             </div>
           )}
 
           {!handedOver && (
             <button className="text-sm text-gray-500 underline w-full text-center" onClick={resetScan}>
-              {t.back}
+              Back
             </button>
           )}
         </div>
